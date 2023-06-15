@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"net"
@@ -43,7 +44,7 @@ type AnythingResponse struct {
 
 func main() {
 	router := gin.Default()
-
+	router.Use(Cors())
 	router.GET("/ip", func(c *gin.Context) {
 		ip, _, _ := net.SplitHostPort(c.Request.RemoteAddr)
 		c.JSON(http.StatusOK, IPResponse{Origin: ip})
@@ -52,6 +53,16 @@ func main() {
 	router.GET("/uuid", func(c *gin.Context) {
 		uuid := generateUUID()
 		c.JSON(http.StatusOK, UUIDResponse{UUID: uuid})
+	})
+
+	router.GET("/base64/:value", func(c *gin.Context) {
+		encodedValue := c.Param("value")
+		decodedBytes, err := base64.URLEncoding.DecodeString(encodedValue)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, string(decodedBytes))
 	})
 
 	router.GET("/user-agent", func(c *gin.Context) {
@@ -110,6 +121,14 @@ func main() {
 	})
 
 	router.Run(":8080")
+}
+
+func Cors() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Next()
+	}
 }
 
 func generateUUID() string {

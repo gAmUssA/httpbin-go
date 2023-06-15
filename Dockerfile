@@ -27,5 +27,7 @@ COPY --from=build-env /app/httpbin .
 # Expose port 8080 for the app
 EXPOSE 8080
 
+ENV GIN_MODE=release
+
 # Command to run the binary
 CMD ["./httpbin"]
