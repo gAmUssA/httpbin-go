@@ -1,50 +1,20 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"math/rand"
+	"github.com/gin-gonic/gin"
+	"github.com/jaswdr/faker"
 	"net"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
+	"strings"
 )
 
-type IPResponse struct {
-	Origin string `json:"origin"`
-}
-
-type UUIDResponse struct {
-	UUID string `json:"uuid"`
-}
-
-type UserAgentResponse struct {
-	UserAgent string `json:"user-agent"`
-}
-
-type GetResponse struct {
-	Args    map[string]string `json:"args"`
-	Headers map[string]string `json:"headers"`
-	Url     string            `json:"url"`
-}
-
-type PostResponse struct {
-	Args    map[string]string `json:"args"`
-	Data    string            `json:"data"`
-	Headers map[string]string `json:"headers"`
-	Json    gin.H             `json:"json"`
-	Url     string            `json:"url"`
-}
-type AnythingResponse struct {
-	Method  string            `json:"method"`
-	Headers map[string]string `json:"headers"`
-	Url     string            `json:"url"`
-}
-
-func main() {
-	router := gin.Default()
+func setupRouter(router *gin.Engine) {
 	router.Use(Cors())
+
 	router.GET("/ip", func(c *gin.Context) {
 		ip, _, _ := net.SplitHostPort(c.Request.RemoteAddr)
 		c.JSON(http.StatusOK, IPResponse{Origin: ip})
@@ -86,7 +56,10 @@ func main() {
 
 	router.POST("/post", func(c *gin.Context) {
 		var jsonBody gin.H
-		c.BindJSON(&jsonBody)
+		err := c.BindJSON(&jsonBody)
+		if err != nil {
+			return
+		}
 		headers, args := make(map[string]string), make(map[string]string)
 		for name, values := range c.Request.Header {
 			headers[name] = values[0]
@@ -101,6 +74,23 @@ func main() {
 			Json:    jsonBody,
 			Url:     c.Request.RequestURI,
 		})
+	})
+
+	router.GET("/response-headers", func(c *gin.Context) {
+		queryParams := c.Request.URL.Query()
+		result := make(map[string]string)
+		for key, values := range queryParams {
+			// If multiple values for the same key are present, join them with a comma
+			//c.Writer.Header().Set(key, strings.Join(values, ","))
+
+			result[key] = strings.Join(values, ",")
+		}
+		// append to existing response headers
+		header := c.Writer.Header()
+		for key, values := range header {
+			result[key] = strings.Join(values, ",")
+		}
+		c.JSON(http.StatusOK, result)
 	})
 
 	router.GET("/status/:status_code", func(c *gin.Context) {
@@ -120,7 +110,84 @@ func main() {
 		})
 	})
 
-	router.Run(":8080")
+	router.GET("/html", func(c *gin.Context) {
+		fake := faker.New()
+
+		var text = fake.Lorem().Paragraph(1)
+		htmlContent := `
+<!DOCTYPE html>
+<html>
+  <head>
+    Hello Random
+  </head>
+  <body>
+    <h1>Lorem Ipsum</h1>
+    <div>
+      <p>` + text +
+			`</p>
+    </div>
+  </body>
+</html>
+`
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(htmlContent))
+	})
+
+	router.GET("/xml", func(c *gin.Context) {
+		slideshow := Slideshow{
+			Title:  "Sample Slide Show",
+			Date:   "Date of publication",
+			Author: "Yours Truly",
+			Slide: []Slide{
+				{
+					Type:  "all",
+					Title: "Wake up to WonderWidgets!",
+				},
+				{
+					Type:  "all",
+					Title: "Overview",
+					Item: []Item{
+						{Content: "Why <em>WonderWidgets</em> are great"},
+						{Content: ""},
+						{Content: "Who <em>buys</em> WonderWidgets"},
+					},
+				},
+			},
+		}
+		c.XML(http.StatusOK, slideshow)
+	})
+
+	router.GET("/json", func(c *gin.Context) {
+		slideshow := JSONSlideshow{
+			Title:  "Sample Slide Show",
+			Date:   "date of publication",
+			Author: "Yours Truly",
+			Slides: []JSONSlide{
+				{
+					Type:  "all",
+					Title: "Wake up to WonderWidgets!",
+				},
+				{
+					Type:  "all",
+					Title: "Overview",
+					Items: []string{
+						"Why <em>WonderWidgets</em> are great",
+						"Who <em>buys</em> WonderWidgets",
+					},
+				},
+			},
+		}
+		c.JSON(http.StatusOK, slideshow)
+	})
+
+}
+
+func main() {
+	router := gin.Default()
+	setupRouter(router)
+	err := router.Run(":8080")
+	if err != nil {
+		return
+	}
 }
 
 func Cors() gin.HandlerFunc {
@@ -133,6 +200,6 @@ func Cors() gin.HandlerFunc {
 
 func generateUUID() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
