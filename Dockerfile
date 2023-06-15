@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.17 AS build-env
+FROM golang:1.20 AS build-env
 
 WORKDIR /app
 
