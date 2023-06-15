@@ -16,7 +16,7 @@ func TestJsonEndpoint(t *testing.T) {
 
 	// Setup Routes
 	router := gin.Default()
-	setupRouter(router)
+	setupJsonRoute(router)
 
 	// Create httptest server
 	server := httptest.NewServer(router)
