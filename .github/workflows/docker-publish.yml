@@ -35,4 +35,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             gamussa/httpbin-go:latest
-            gamussa/httpbin-go:${GITHUB_SHA}
+            gamussa/httpbin-go:${{ github.sha::5 }}
