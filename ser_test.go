@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,7 +18,7 @@ func TestJsonEndpoint(t *testing.T) {
 
 	// Setup Routes
 	router := gin.Default()
-	setupJsonRoute(router)
+	SetupJsonRoute(router)
 
 	// Create httptest server
 	server := httptest.NewServer(router)
@@ -67,4 +69,48 @@ func TestJsonEndpoint(t *testing.T) {
 		},
 	}
 	assert.Equal(t, expectedData, jsonData)
+}
+
+func TestXMLRoute(t *testing.T) {
+	// Set Gin to Test Mode
+	gin.SetMode(gin.TestMode)
+
+	// Setup Routes
+	router := gin.Default()
+	SetupXmlRoute(router)
+
+	// Create httptest server
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	// Make a request to the /xml endpoint
+	res, err := http.Get(server.URL + "/xml")
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	// Read the response body
+	body, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	// Parse the XML response
+	var s Slideshow
+	err = xml.Unmarshal(body, &s)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	// Check the XML attributes
+	if s.Title != "Sample Slide Show" {
+		t.Errorf("Expected title to be 'Sample Slide Show', got %v", s.Title)
+	}
+	if s.Author != "Yours Truly" {
+		t.Errorf("Expected author to be 'Yours Truly', got %v", s.Author)
+	}
+	if s.Date != "Date of publication" {
+		t.Errorf("Expected date to be 'Date of publication', got %v", s.Date)
+	}
 }
