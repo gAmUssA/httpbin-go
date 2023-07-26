@@ -95,7 +95,11 @@ func setupRouter(router *gin.Engine) {
 
 	router.GET("/status/:status_code", func(c *gin.Context) {
 		statusCode, _ := strconv.Atoi(c.Param("status_code"))
-		c.JSON(statusCode, gin.H{"message": http.StatusText(statusCode)})
+		if statusCode == 300 {
+			c.JSON(statusCode, gin.H{"message": "💦 🚜"})
+		} else {
+			c.JSON(statusCode, gin.H{"message": http.StatusText(statusCode)})
+		}
 	})
 
 	router.GET("/anything", func(c *gin.Context) {
