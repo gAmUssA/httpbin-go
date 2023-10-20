@@ -65,10 +65,11 @@ func SetupRootRoute(router *gin.Engine) {
 		routes := router.Routes()
 
 		var builder strings.Builder
+		builder.WriteString("<h1>Welcome to My httpcan</h1>")
 		builder.WriteString("<h2>List of all endpoints:</h2>")
 		builder.WriteString("<ul>")
 		for _, route := range routes {
-			builder.WriteString(fmt.Sprintf("<li><strong>%s</strong> - <a href=\"%s\">%s</a></li>", route.Method, route.Path, stripLeadingSlash(route.Path)))
+			builder.WriteString(fmt.Sprintf("<li><strong>%s</strong> - <a href=\"%s\">%s</a></li>", route.Method, stripLeadingSlash(route.Path), route.Path))
 		}
 		builder.WriteString("</ul>")
 
