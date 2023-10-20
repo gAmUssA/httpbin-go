@@ -13,7 +13,7 @@ ENV GO111MODULE=on
 RUN go mod download
 
 # Build the Go app binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o httpbin .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -buildvcs=false -o httpbin .
 
 # Final stage
 FROM alpine:latest

@@ -13,6 +13,7 @@ import (
 )
 
 func setupRouter(router *gin.Engine) {
+	router.Use(DefaultHeaders())
 	router.Use(Cors())
 
 	router.GET("/ip", func(c *gin.Context) {
@@ -138,6 +139,7 @@ func setupRouter(router *gin.Engine) {
 
 	SetupXmlRoute(router)
 	SetupJsonRoute(router)
+	SetupRootRoute(router)
 }
 
 func main() {
@@ -146,14 +148,6 @@ func main() {
 	err := router.Run(":8080")
 	if err != nil {
 		return
-	}
-}
-
-func Cors() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Next()
 	}
 }
 

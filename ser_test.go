@@ -71,6 +71,31 @@ func TestJsonEndpoint(t *testing.T) {
 	assert.Equal(t, expectedData, jsonData)
 }
 
+func TestDefaultHeaders(t *testing.T) {
+	// Set Gin to Test Mode
+	gin.SetMode(gin.TestMode)
+
+	// Setup Routes
+	router := gin.Default()
+	router.Use(DefaultHeaders())
+
+	// Create httptest server
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	resp, err := http.Get(ts.URL + "/test")
+	if err != nil {
+		t.Fatalf("Failed to send request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Check if the default header is present
+	val := resp.Header.Get("Server")
+	if val != "Gin "+gin.Version {
+		t.Errorf("Expected header value of 'Server', got %v", val)
+	}
+}
+
 func TestXMLRoute(t *testing.T) {
 	// Set Gin to Test Mode
 	gin.SetMode(gin.TestMode)

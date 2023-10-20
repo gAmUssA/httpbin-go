@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 )
 
 func SetupXmlRoute(router *gin.Engine) {
@@ -54,5 +56,23 @@ func SetupJsonRoute(router *gin.Engine) {
 			},
 		}
 		c.JSON(http.StatusOK, slideshow)
+	})
+}
+
+func SetupRootRoute(router *gin.Engine) {
+	router.GET("/", func(c *gin.Context) {
+		// Get all registered routes
+		routes := router.Routes()
+
+		var builder strings.Builder
+		builder.WriteString("<h2>List of all endpoints:</h2>")
+		builder.WriteString("<ul>")
+		for _, route := range routes {
+			builder.WriteString(fmt.Sprintf("<li><strong>%s</strong> - <a href=\"%s\">%s</a></li>", route.Method, route.Path, route.Path))
+		}
+		builder.WriteString("</ul>")
+
+		c.Header("Content-Type", "text/html")
+		c.String(http.StatusOK, builder.String())
 	})
 }
